@@ -337,7 +337,6 @@
     line-height: 1.35;
   }
 
-  /* Tips-rad: dold på desktop, visas bara på mobil */
   .mobile-tip {
     display: none;
     text-align: center;
@@ -482,8 +481,14 @@
     return { black, white };
   }
 
+  /* ---------- Koalitionskommentar med variation ---------- */
+
   const LEFT  = new Set(['V', 'S', 'MP']);
   const RIGHT = new Set(['M', 'KD', 'L', 'SD']);
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
 
   function coalitionComment(guess) {
     const names = guess.map(i => COLORS[i].name);
@@ -495,43 +500,120 @@
     const hasRight = names.some(n => RIGHT.has(n));
     const hasC     = has('C');
 
-    if (uniqueCount === 1) return 'A one-party government.';
+    if (uniqueCount === 1) return pick([
+      'A one-party government.',
+      'Single-party rule. Efficient, if nothing else.',
+      'One party, all the power.',
+    ]);
 
     if (uniqueCount === 4) {
-      if (has('M') && has('KD') && has('L') && has('SD'))
-        return 'The Tidö Agreement, incarnate.';
-      if (has('M') && has('KD') && has('L') && has('C'))
-        return 'The Alliance, reunited.';
-      if (has('S') && has('MP') && has('V') && has('C'))
-        return 'A January Agreement, take two.';
+      if (has('M') && has('KD') && has('L') && has('SD')) return pick([
+        'The Tidö Agreement, incarnate.',
+        'The Tidö quartet, in the flesh.',
+        'M, KD, L, SD — the current arrangement.',
+      ]);
+      if (has('M') && has('KD') && has('L') && has('C')) return pick([
+        'The Alliance, reunited.',
+        'Alliansen, back from the dead.',
+        'The four-party centre-right classic.',
+      ]);
+      if (has('S') && has('MP') && has('V') && has('C')) return pick([
+        'A January Agreement, take two.',
+        'The January Agreement, reborn.',
+        'S, MP, V, C — the 2019 arrangement.',
+      ]);
     }
 
     if (hasLeft && hasRight) {
-      if (has('V') && has('SD')) return 'Strange bedfellows — but not impossible.';
-      if (has('V') && has('M'))  return 'Across the aisle — ambitious.';
-      if (has('S') && has('M'))  return 'A grand coalition. Rare, but it happens.';
-      if (has('S') && has('SD')) return 'Once unthinkable, now debated.';
-      if (has('MP') && has('SD')) return 'Greens and Sweden Democrats? Bold.';
-      return 'A cross-bloc experiment.';
+      if (has('V') && has('SD')) return pick([
+        'Strange bedfellows — but not impossible.',
+        'V and SD in the same room? Interesting.',
+        'The two ends of the spectrum, sharing a table.',
+      ]);
+      if (has('V') && has('M')) return pick([
+        'Across the aisle — ambitious.',
+        'V and M in one government? That would make news.',
+        'The far left meets the centre-right.',
+      ]);
+      if (has('S') && has('M')) return pick([
+        'A grand coalition. Rare, but it happens.',
+        'S and M together — the German model.',
+        'The two big parties, side by side.',
+      ]);
+      if (has('S') && has('SD')) return pick([
+        'Once unthinkable, now debated.',
+        'S and SD — the question of our time.',
+        'The cordon sanitaire, breached.',
+      ]);
+      if (has('MP') && has('SD')) return pick([
+        'Greens and Sweden Democrats? Bold.',
+        'MP and SD — climate meets immigration.',
+        'Two very different agendas at one table.',
+      ]);
+      return pick([
+        'A cross-bloc experiment.',
+        'Across the bloc divide.',
+        'The centre cannot hold.',
+      ]);
     }
 
     if (hasLeft && !hasRight && !hasC) {
-      if (has('V') && has('MP')) return 'Classic red-green coalition.';
-      if (has('S') && has('MP')) return 'Red-green, as tradition dictates.';
-      if (has('V') && has('S'))  return 'A solid left coalition.';
-      return 'A left-leaning government.';
+      if (has('V') && has('MP')) return pick([
+        'Classic red-green coalition.',
+        'Red and green, as it once was.',
+        'The old red-green alliance.',
+      ]);
+      if (has('S') && has('MP')) return pick([
+        'Red-green, as tradition dictates.',
+        'S and MP — a familiar pairing.',
+        'The classic Social Democrat–Green team.',
+      ]);
+      if (has('V') && has('S')) return pick([
+        'A solid left coalition.',
+        'The left, standing together.',
+        'Two shades of red.',
+      ]);
+      return pick([
+        'A left-leaning government.',
+        'The left bloc, assembled.',
+        'A coalition of the left.',
+      ]);
     }
 
     if (hasRight && !hasLeft && !hasC) {
-      if (has('SD')) return 'A right-wing bloc with SD support.';
-      return 'A traditional center-right government.';
+      if (has('SD')) return pick([
+        'A right-wing bloc with SD support.',
+        'The right, with SD in the fold.',
+        'A centre-right government, SD-backed.',
+      ]);
+      return pick([
+        'A traditional center-right government.',
+        'The classic non-SD right.',
+        'A bourgeois coalition, old style.',
+      ]);
     }
 
-    if (hasC && hasLeft && !hasRight)  return 'Center-left — a Swedish classic.';
-    if (hasC && hasRight && !hasLeft)  return 'Center-right, as tradition dictates.';
-    if (hasC && hasLeft && hasRight)   return 'C holding the balance — very Swedish.';
+    if (hasC && hasLeft && !hasRight) return pick([
+      'Center-left — a Swedish classic.',
+      'C with the left — a familiar dance.',
+      'The middle meeting the left.',
+    ]);
+    if (hasC && hasRight && !hasLeft) return pick([
+      'Center-right, as tradition dictates.',
+      'C with the right — the usual arrangement.',
+      'The middle leaning right.',
+    ]);
+    if (hasC && hasLeft && hasRight) return pick([
+      'C holding the balance — very Swedish.',
+      'C as kingmaker. Again.',
+      'The pivot party, pivoting.',
+    ]);
 
-    return 'An interesting combination.';
+    return pick([
+      'An interesting combination.',
+      'A novel constellation.',
+      'Not one you see every day.',
+    ]);
   }
 
   function filledCount() {
@@ -577,7 +659,12 @@
 
     const guessArray = current.slice();
     const fb = feedback(guessArray, secret);
-    guesses.push({ guess: guessArray, black: fb.black, white: fb.white });
+    guesses.push({
+      guess: guessArray,
+      black: fb.black,
+      white: fb.white,
+      comment: coalitionComment(guessArray),   /* ← låses vid gissningstillfället */
+    });
     current = Array(CODE_LENGTH).fill(null);
     selectedColor = null;
 
@@ -690,7 +777,7 @@
       const comment = document.createElement('div');
       comment.className = 'comment';
       if (fb) {
-        comment.textContent = coalitionComment(pegColors);
+        comment.textContent = fb.comment;   /* ← den sparade kommentaren */
       }
       row.appendChild(comment);
 
