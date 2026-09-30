@@ -170,27 +170,35 @@
     overflow: hidden;
   }
 
+  /* ---- Feedback-fältet: nu en tydligt ljusare grå yta ---- */
   .feedback {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3px;
-    padding: 3px;
+    padding: 4px;
+    background: #4a4a55;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35);
   }
 
   .fb-peg {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
+    background: #7a7a86;                 /* tom plats: mellangrå, syns mot fältet */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
   }
 
   .fb-peg.black {
-    background: #0c0c10;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #050508;                 /* djupare svart för maximal kontrast */
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.6);
   }
 
   .fb-peg.white {
-    background: #e8e8ec;
+    background: #f0f0f4;
+    box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.15);
   }
 
   .palette {
@@ -347,7 +355,6 @@
     }
     .comment:empty { display: none; }
 
-    /* Palett som grid – alla åtta delar jämnt på bredden */
     .palette {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
@@ -361,7 +368,14 @@
     }
     .color-btn.two-letter { font-size: 0.62rem; }
 
+    /* Feedback-fältet skalas ned men behåller sin ljusare grå */
+    .feedback {
+      gap: 2px;
+      padding: 3px;
+      border-radius: 7px;
+    }
     .fb-peg { width: 10px; height: 10px; }
+
     .drag-ghost { width: 40px; height: 40px; font-size: 0.88rem; }
     .drag-ghost.two-letter { font-size: 0.72rem; }
     .controls button { padding: 10px 8px; font-size: 0.85rem; }
