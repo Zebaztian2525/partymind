@@ -170,7 +170,6 @@
     overflow: hidden;
   }
 
-  /* ---- Feedback-fältet: tomt tills en gissning har gjorts ---- */
   .feedback {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -191,7 +190,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: transparent;                 /* osynlig tills fältet är aktivt */
+    background: transparent;
   }
 
   .feedback.active .fb-peg {
@@ -338,6 +337,18 @@
     line-height: 1.35;
   }
 
+  /* Tips-rad: dold på desktop, visas bara på mobil */
+  .mobile-tip {
+    display: none;
+    text-align: center;
+    font-size: 0.68rem;
+    font-style: italic;
+    color: var(--muted);
+    opacity: 0.7;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+
   @media (max-width: 520px) {
     body { padding: 10px; }
     .game { padding: 14px; border-radius: 14px; }
@@ -387,6 +398,8 @@
     .drag-ghost { width: 40px; height: 40px; font-size: 0.88rem; }
     .drag-ghost.two-letter { font-size: 0.72rem; }
     .controls button { padding: 10px 8px; font-size: 0.85rem; }
+
+    .mobile-tip { display: block; }
   }
 </style>
 </head>
@@ -403,6 +416,7 @@
     <button id="new">New game</button>
   </div>
   <div class="message" id="message"></div>
+  <div class="mobile-tip">Tip: drag the board up to stabilise the view.</div>
 </div>
 
 <script>
@@ -682,7 +696,7 @@
 
       const fbWrap = document.createElement('div');
       fbWrap.className = 'feedback';
-      if (fb) fbWrap.classList.add('active');   /* ← bara synligt när det finns en gissning */
+      if (fb) fbWrap.classList.add('active');
 
       const blacks = fb ? fb.black : 0;
       const whites = fb ? fb.white : 0;
