@@ -490,7 +490,7 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  function coalitionComment(guess) {
+    function coalitionComment(guess) {
     const names = guess.map(i => COLORS[i].name);
     const set = new Set(names);
     const uniqueCount = set.size;
@@ -526,9 +526,10 @@
 
     if (hasLeft && hasRight) {
       if (has('V') && has('SD')) return pick([
-        'Strange bedfellows — but not impossible.',
-        'V and SD in the same room? Interesting.',
-        'The two ends of the spectrum, sharing a table.',
+        'Hell would freeze over first.',
+        'The two poles of Swedish politics. Never in government.',
+        'The coalition that will never be.',
+        'Pigs might fly, but not this government.',
       ]);
       if (has('V') && has('M')) return pick([
         'Across the aisle — ambitious.',
@@ -551,9 +552,9 @@
         'Two very different agendas at one table.',
       ]);
       return pick([
-        'A cross-bloc experiment.',
-        'Across the bloc divide.',
-        'The centre cannot hold.',
+        'Across the aisle — the hard way.',
+        'Left and right, sharing a table.',
+        'An unusual pairing, to say the least.',
       ]);
     }
 
