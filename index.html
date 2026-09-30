@@ -159,7 +159,6 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
   }
 
-  /* Koalitionskommentar i tomrummet mellan brickor och feedback */
   .comment {
     font-size: 0.7rem;
     font-style: italic;
@@ -333,8 +332,33 @@
     .peg.big { width: 34px; height: 34px; font-size: 0.72rem; }
     .peg.big.two-letter { font-size: 0.58rem; }
     .pegs { gap: 6px; }
-    .row { grid-template-columns: 20px auto 1fr auto; gap: 6px; padding: 4px 6px; }
-    .comment { display: none; }   /* för trångt på mobil */
+
+    /* Raden blir flexbox på mobil så kommentaren kan hamna på egen rad */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+    }
+    .row-num { flex: 0 0 20px; }
+    .pegs { flex: 1 1 auto; }
+    .feedback { flex: 0 0 auto; }
+
+    .comment {
+      flex: 0 0 100%;
+      display: block;
+      text-align: center;
+      padding: 4px 0 0 0;
+      font-size: 0.68rem;
+      letter-spacing: 0.01em;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .comment:empty { display: none; }
+
     .fb-peg { width: 10px; height: 10px; }
     .color-btn { width: 40px; height: 40px; font-size: 0.88rem; }
     .color-btn.two-letter { font-size: 0.72rem; }
@@ -438,10 +462,8 @@
     const hasRight = names.some(n => RIGHT.has(n));
     const hasC     = has('C');
 
-    // Enparti
     if (uniqueCount === 1) return 'A one-party government.';
 
-    // Kända fyrpartikonstellationer
     if (uniqueCount === 4) {
       if (has('M') && has('KD') && has('L') && has('SD'))
         return 'The Tidö Agreement, incarnate.';
@@ -451,7 +473,6 @@
         return 'A January Agreement, take two.';
     }
 
-    // Tvärs över blockgränsen
     if (hasLeft && hasRight) {
       if (has('V') && has('SD')) return 'Strange bedfellows — but not impossible.';
       if (has('V') && has('M'))  return 'Across the aisle — ambitious.';
@@ -461,7 +482,6 @@
       return 'A cross-bloc experiment.';
     }
 
-    // Rent vänsterblock
     if (hasLeft && !hasRight && !hasC) {
       if (has('V') && has('MP')) return 'Classic red-green coalition.';
       if (has('S') && has('MP')) return 'Red-green, as tradition dictates.';
@@ -469,13 +489,11 @@
       return 'A left-leaning government.';
     }
 
-    // Rent högerblock
     if (hasRight && !hasLeft && !hasC) {
       if (has('SD')) return 'A right-wing bloc with SD support.';
       return 'A traditional center-right government.';
     }
 
-    // C tillsammans med ett block
     if (hasC && hasLeft && !hasRight)  return 'Center-left — a Swedish classic.';
     if (hasC && hasRight && !hasLeft)  return 'Center-right, as tradition dictates.';
     if (hasC && hasLeft && hasRight)   return 'C holding the balance — very Swedish.';
@@ -636,7 +654,6 @@
       }
       row.appendChild(pegs);
 
-      // Koalitionskommentar – visas bara på inlämnade rader
       const comment = document.createElement('div');
       comment.className = 'comment';
       if (fb) {
