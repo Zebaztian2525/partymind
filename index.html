@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partymind</title>
+<style>
+  :root {
+    --bg:     #1e1e24;
+    --panel:  #2a2a33;
+    --hole:   #3a3a44;
+    --text:   #e8e8ec;
+    --muted:  #8a8a96;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  .game {
+    width: 100%;
+    max-width: 550px;
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 12px 44px rgba(0, 0, 0, 0.48);
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+    text-align: center;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .secret {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 11px;
+    margin-bottom: 12px;
+  }
+
+  .board {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 24px auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .row.current {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+
+  .row-num {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pegs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .peg {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--hole);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s, transform 0.08s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.72rem;
+    line-height: 1;
+  }
+
+  .peg.filled {
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 -3px 6px rgba(0, 0, 0, 0.32),
+      inset 0 3px 6px rgba(255, 255, 255, 0.14);
+  }
+
+  .peg.two-letter { font-size: 0.58rem; letter-spacing: 0.02em; }
+
+  .peg.big {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+  .peg.big.two-letter { font-size: 0.68rem; }
+
+  .peg.hidden-peg {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .row.current .peg {
+    cursor: pointer;
+  }
+
+  .row.current .peg:hover {
+    transform: scale(1.09);
+    box-shadow:
+      inset 0 -3px 6px rgba(0, 0, 0, 0.32),
+      inset 0 3px 6px rgba(255, 255, 255, 0.14),
+      0 0 0 2px rgba(255, 255, 255, 0.28);
+  }
+
+  .peg.drop-target {
+    transform: scale(1.12);
+    box-shadow:
+      inset 0 -3px 6px rgba(0, 0, 0, 0.32),
+      inset 0 3px 6px rgba(255, 255, 255, 0.14),
+      0 0 0 3px #6b9e78 !important;
+  }
+
+  body.has-selection .row.current .peg:not(.filled) {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+
+  body.dragging .row.current .peg {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+
+  /* Koalitionskommentar i tomrummet mellan brickor och feedback */
+  .comment {
+    font-size: 0.7rem;
+    font-style: italic;
+    color: var(--muted);
+    text-align: right;
+    padding-right: 4px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.15;
+  }
+
+  .feedback {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .fb-peg {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .fb-peg.black {
+    background: #0c0c10;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .fb-peg.white {
+    background: #e8e8ec;
+  }
+
+  .palette {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .color-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: grab;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: inherit;
+    line-height: 1;
+    transition:
+      transform 0.14s ease,
+      box-shadow 0.14s ease,
+      opacity 0.15s;
+    box-shadow:
+      inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 4px 8px rgba(255, 255, 255, 0.16);
+    touch-action: none;
+  }
+
+  .color-btn.two-letter { font-size: 0.82rem; }
+
+  .color-btn:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.07);
+    box-shadow:
+      inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 4px 8px rgba(255, 255, 255, 0.18),
+      0 10px 20px rgba(0, 0, 0, 0.4),
+      0 0 0 2px rgba(255, 255, 255, 0.22);
+  }
+
+  .color-btn:active:not(:disabled) { cursor: grabbing; }
+  .color-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .color-btn.selected {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow:
+      inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 4px 8px rgba(255, 255, 255, 0.18),
+      0 8px 16px rgba(0, 0, 0, 0.35),
+      0 0 0 2px var(--panel),
+      0 0 0 3px rgba(255, 255, 255, 0.55);
+  }
+
+  body.dragging .color-btn { cursor: grabbing; }
+
+  .drag-ghost {
+    position: fixed;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    opacity: 0.94;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    left: -100px;
+    top: -100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .drag-ghost.two-letter { font-size: 0.82rem; }
+
+  .hint {
+    text-align: center;
+    font-size: 0.76rem;
+    color: var(--muted);
+    min-height: 1.2em;
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .controls button {
+    flex: 1;
+    padding: 11px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+  }
+
+  .controls button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+  .controls button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .controls #submit {
+    background: #6b9e78;
+    border-color: #6b9e78;
+    color: #fff;
+  }
+  .controls #submit:hover:not(:disabled) { background: #7aae87; }
+
+  .message {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--muted);
+    min-height: 1.3em;
+    line-height: 1.35;
+  }
+
+  @media (max-width: 520px) {
+    body { padding: 10px; }
+    .game { padding: 14px; border-radius: 14px; }
+    h1 { font-size: 1.15rem; margin-bottom: 10px; }
+    .peg { width: 28px; height: 28px; font-size: 0.62rem; }
+    .peg.two-letter { font-size: 0.5rem; }
+    .peg.big { width: 34px; height: 34px; font-size: 0.72rem; }
+    .peg.big.two-letter { font-size: 0.58rem; }
+    .pegs { gap: 6px; }
+    .row { grid-template-columns: 20px auto 1fr auto; gap: 6px; padding: 4px 6px; }
+    .comment { display: none; }   /* för trångt på mobil */
+    .fb-peg { width: 10px; height: 10px; }
+    .color-btn { width: 40px; height: 40px; font-size: 0.88rem; }
+    .color-btn.two-letter { font-size: 0.72rem; }
+    .drag-ghost { width: 40px; height: 40px; font-size: 0.88rem; }
+    .drag-ghost.two-letter { font-size: 0.72rem; }
+    .palette { gap: 8px; }
+    .controls button { padding: 10px 8px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <h1>Partymind</h1>
+  <div class="secret" id="secret"></div>
+  <div class="board" id="board"></div>
+  <div class="palette" id="palette"></div>
+  <div class="hint" id="hint">Drag or click a party into a box</div>
+  <div class="controls">
+    <button id="undo">Undo</button>
+    <button id="submit">Guess</button>
+    <button id="new">New game</button>
+  </div>
+  <div class="message" id="message"></div>
+</div>
+
+<script>
+  const COLORS = [
+    { name: 'V',  full: 'Vänsterpartiet',      hex: '#d71b3b', fg: '#ffffff' },
+    { name: 'S',  full: 'Socialdemokraterna',  hex: '#ed4040', fg: '#ffffff' },
+    { name: 'MP', full: 'Miljöpartiet',        hex: '#53a35a', fg: '#ffffff' },
+    { name: 'C',  full: 'Centerpartiet',       hex: '#009c85', fg: '#ffffff' },
+    { name: 'L',  full: 'Liberalerna',         hex: '#006ab3', fg: '#ffffff' },
+    { name: 'KD', full: 'Kristdemokraterna',   hex: '#5f5395', fg: '#ffffff' },
+    { name: 'M',  full: 'Moderaterna',         hex: '#52bde9', fg: '#ffffff' },
+    { name: 'SD', full: 'Sverigedemokraterna', hex: '#ffcc00', fg: '#1e1e24' },
+  ];
+
+  const CODE_LENGTH = 4;
+  const MAX_GUESSES = 10;
+
+  const secretEl  = document.getElementById('secret');
+  const boardEl   = document.getElementById('board');
+  const paletteEl = document.getElementById('palette');
+  const hintEl    = document.getElementById('hint');
+  const messageEl = document.getElementById('message');
+  const submitBtn = document.getElementById('submit');
+  const undoBtn   = document.getElementById('undo');
+  const newBtn    = document.getElementById('new');
+
+  let secret = [];
+  let guesses = [];
+  let current = Array(CODE_LENGTH).fill(null);
+  let selectedColor = null;
+  let gameOver = false;
+
+  function newGame() {
+    secret = Array.from({ length: CODE_LENGTH },
+      () => Math.floor(Math.random() * COLORS.length));
+    guesses = [];
+    current = Array(CODE_LENGTH).fill(null);
+    selectedColor = null;
+    gameOver = false;
+    render();
+    setMessage('Drag a party to the row — or click.');
+  }
+
+  function feedback(guess, secret) {
+    let black = 0;
+    const secretLeft = {};
+    const guessLeft = {};
+
+    for (let i = 0; i < secret.length; i++) {
+      if (guess[i] === secret[i]) {
+        black++;
+      } else {
+        secretLeft[secret[i]] = (secretLeft[secret[i]] || 0) + 1;
+        guessLeft[guess[i]]   = (guessLeft[guess[i]]   || 0) + 1;
+      }
+    }
+
+    let white = 0;
+    for (const c in guessLeft) {
+      white += Math.min(guessLeft[c], secretLeft[c] || 0);
+    }
+
+    return { black, white };
+  }
+
+  /* ---------- Koalitionskommentar ---------- */
+
+  const LEFT  = new Set(['V', 'S', 'MP']);
+  const RIGHT = new Set(['M', 'KD', 'L', 'SD']);
+
+  function coalitionComment(guess) {
+    const names = guess.map(i => COLORS[i].name);
+    const set = new Set(names);
+    const uniqueCount = set.size;
+    const has = n => set.has(n);
+
+    const hasLeft  = names.some(n => LEFT.has(n));
+    const hasRight = names.some(n => RIGHT.has(n));
+    const hasC     = has('C');
+
+    // Enparti
+    if (uniqueCount === 1) return 'A one-party government.';
+
+    // Kända fyrpartikonstellationer
+    if (uniqueCount === 4) {
+      if (has('M') && has('KD') && has('L') && has('SD'))
+        return 'The Tidö Agreement, incarnate.';
+      if (has('M') && has('KD') && has('L') && has('C'))
+        return 'The Alliance, reunited.';
+      if (has('S') && has('MP') && has('V') && has('C'))
+        return 'A January Agreement, take two.';
+    }
+
+    // Tvärs över blockgränsen
+    if (hasLeft && hasRight) {
+      if (has('V') && has('SD')) return 'Strange bedfellows — but not impossible.';
+      if (has('V') && has('M'))  return 'Across the aisle — ambitious.';
+      if (has('S') && has('M'))  return 'A grand coalition. Rare, but it happens.';
+      if (has('S') && has('SD')) return 'Once unthinkable, now debated.';
+      if (has('MP') && has('SD')) return 'Greens and Sweden Democrats? Bold.';
+      return 'A cross-bloc experiment.';
+    }
+
+    // Rent vänsterblock
+    if (hasLeft && !hasRight && !hasC) {
+      if (has('V') && has('MP')) return 'Classic red-green coalition.';
+      if (has('S') && has('MP')) return 'Red-green, as tradition dictates.';
+      if (has('V') && has('S'))  return 'A solid left coalition.';
+      return 'A left-leaning government.';
+    }
+
+    // Rent högerblock
+    if (hasRight && !hasLeft && !hasC) {
+      if (has('SD')) return 'A right-wing bloc with SD support.';
+      return 'A traditional center-right government.';
+    }
+
+    // C tillsammans med ett block
+    if (hasC && hasLeft && !hasRight)  return 'Center-left — a Swedish classic.';
+    if (hasC && hasRight && !hasLeft)  return 'Center-right, as tradition dictates.';
+    if (hasC && hasLeft && hasRight)   return 'C holding the balance — very Swedish.';
+
+    return 'An interesting combination.';
+  }
+
+  function filledCount() {
+    return current.filter(v => v !== null).length;
+  }
+
+  function selectColor(index) {
+    if (gameOver) return;
+    selectedColor = (selectedColor === index) ? null : index;
+    render();
+  }
+
+  function clickSlot(slotIndex) {
+    if (gameOver) return;
+    if (current[slotIndex] !== null) {
+      current[slotIndex] = null;
+    } else if (selectedColor !== null) {
+      current[slotIndex] = selectedColor;
+    }
+    render();
+  }
+
+  function placeColor(slotIndex, colorIndex) {
+    if (gameOver) return;
+    if (slotIndex < 0 || slotIndex >= CODE_LENGTH) return;
+    current[slotIndex] = colorIndex;
+    render();
+  }
+
+  function undo() {
+    if (gameOver) return;
+    for (let i = CODE_LENGTH - 1; i >= 0; i--) {
+      if (current[i] !== null) {
+        current[i] = null;
+        render();
+        return;
+      }
+    }
+  }
+
+  function submitGuess() {
+    if (gameOver || filledCount() !== CODE_LENGTH) return;
+
+    const guessArray = current.slice();
+    const fb = feedback(guessArray, secret);
+    guesses.push({ guess: guessArray, black: fb.black, white: fb.white });
+    current = Array(CODE_LENGTH).fill(null);
+    selectedColor = null;
+
+    if (fb.black === CODE_LENGTH) {
+      gameOver = true;
+      setMessage(`Coalition formed! Cracked in ${guesses.length} ${guesses.length === 1 ? 'try' : 'tries'}.`);
+    } else if (guesses.length === MAX_GUESSES) {
+      gameOver = true;
+      setMessage('Out of tries — the coalition is revealed above.');
+    } else {
+      setMessage(`${fb.black} black · ${fb.white} white`);
+    }
+
+    render();
+  }
+
+  function setMessage(text) {
+    messageEl.textContent = text;
+  }
+
+  function render() {
+    document.body.classList.toggle('has-selection', selectedColor !== null);
+    renderSecret();
+    renderBoard();
+    renderPalette();
+    renderHint();
+    submitBtn.disabled = gameOver || filledCount() !== CODE_LENGTH;
+    undoBtn.disabled   = gameOver || filledCount() === 0;
+  }
+
+  function renderHint() {
+    if (gameOver) { hintEl.textContent = ''; return; }
+    if (selectedColor !== null) {
+      hintEl.textContent = `${COLORS[selectedColor].full} selected — click a slot or drag it`;
+    } else if (filledCount() > 0) {
+      hintEl.textContent = 'Drag a party here — or click a filled slot to clear it';
+    } else {
+      hintEl.textContent = 'Drag or click a party into a box';
+    }
+  }
+
+  function applyColorToPeg(peg, colorIndex, size) {
+    const c = COLORS[colorIndex];
+    peg.style.background = c.hex;
+    peg.style.color = c.fg;
+    peg.textContent = c.name;
+    if (c.name.length > 1) peg.classList.add('two-letter');
+    if (size === 'big') peg.classList.add('big');
+    peg.classList.add('filled');
+  }
+
+  function renderSecret() {
+    secretEl.innerHTML = '';
+    for (let i = 0; i < CODE_LENGTH; i++) {
+      const peg = document.createElement('div');
+      peg.className = 'peg';
+      if (gameOver) {
+        applyColorToPeg(peg, secret[i], 'big');
+      } else {
+        peg.classList.add('hidden-peg');
+        peg.textContent = '?';
+        peg.style.width = '40px';
+        peg.style.height = '40px';
+      }
+      secretEl.appendChild(peg);
+    }
+  }
+
+  function renderBoard() {
+    boardEl.innerHTML = '';
+
+    for (let r = 0; r < MAX_GUESSES; r++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const num = document.createElement('div');
+      num.className = 'row-num';
+      num.textContent = r + 1;
+      row.appendChild(num);
+
+      let pegColors = Array(CODE_LENGTH).fill(null);
+      let fb = null;
+      let isCurrent = false;
+
+      if (r < guesses.length) {
+        pegColors = guesses[r].guess;
+        fb = guesses[r];
+      } else if (r === guesses.length && !gameOver) {
+        pegColors = current.slice();
+        isCurrent = true;
+      }
+
+      const pegs = document.createElement('div');
+      pegs.className = 'pegs';
+
+      for (let c = 0; c < CODE_LENGTH; c++) {
+        const peg = document.createElement('div');
+        peg.className = 'peg';
+        if (pegColors[c] !== null && pegColors[c] !== undefined) {
+          applyColorToPeg(peg, pegColors[c]);
+        }
+        if (isCurrent) {
+          peg.dataset.slot = c;
+          peg.addEventListener('click', () => clickSlot(c));
+        }
+        pegs.appendChild(peg);
+      }
+      row.appendChild(pegs);
+
+      // Koalitionskommentar – visas bara på inlämnade rader
+      const comment = document.createElement('div');
+      comment.className = 'comment';
+      if (fb) {
+        comment.textContent = coalitionComment(pegColors);
+      }
+      row.appendChild(comment);
+
+      const fbWrap = document.createElement('div');
+      fbWrap.className = 'feedback';
+      const blacks = fb ? fb.black : 0;
+      const whites = fb ? fb.white : 0;
+
+      for (let i = 0; i < 4; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'fb-peg';
+        if (i < blacks) dot.classList.add('black');
+        else if (i < blacks + whites) dot.classList.add('white');
+        fbWrap.appendChild(dot);
+      }
+      row.appendChild(fbWrap);
+
+      if (isCurrent) row.classList.add('current');
+      boardEl.appendChild(row);
+    }
+  }
+
+  function renderPalette() {
+    paletteEl.innerHTML = '';
+    COLORS.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'color-btn';
+      if (c.name.length > 1) btn.classList.add('two-letter');
+      btn.style.background = c.hex;
+      btn.style.color = c.fg;
+      btn.textContent = c.name;
+      btn.title = c.full;
+      btn.setAttribute('aria-label', c.full);
+      btn.setAttribute('aria-pressed', selectedColor === i ? 'true' : 'false');
+      if (selectedColor === i) btn.classList.add('selected');
+      btn.disabled = gameOver;
+      makeColorDraggable(btn, i);
+      paletteEl.appendChild(btn);
+    });
+  }
+
+  function makeColorDraggable(btn, colorIndex) {
+    btn.addEventListener('mousedown', (e) => {
+      if (gameOver || e.button !== 0) return;
+      e.preventDefault();
+      startPointerDrag(e.clientX, e.clientY, colorIndex, 'mouse');
+    });
+
+    btn.addEventListener('touchstart', (e) => {
+      if (gameOver) return;
+      const t = e.touches[0];
+      startPointerDrag(t.clientX, t.clientY, colorIndex, 'touch', e);
+    }, { passive: true });
+  }
+
+  function startPointerDrag(startX, startY, colorIndex, type) {
+    let ghost = null;
+    let dragging = false;
+    const threshold = type === 'touch' ? 6 : 4;
+
+    const moveEvent   = type === 'touch' ? 'touchmove'  : 'mousemove';
+    const endEvent    = type === 'touch' ? 'touchend'   : 'mouseup';
+    const cancelEvent = type === 'touch' ? 'touchcancel': null;
+
+    function getPos(ev) {
+      if (type === 'touch') {
+        const t = ev.touches[0] || ev.changedTouches[0];
+        return { x: t.clientX, y: t.clientY };
+      }
+      return { x: ev.clientX, y: ev.clientY };
+    }
+
+    function onMove(ev) {
+      const { x, y } = getPos(ev);
+      const dx = x - startX;
+      const dy = y - startY;
+
+      if (!dragging && Math.hypot(dx, dy) > threshold) {
+        dragging = true;
+        const c = COLORS[colorIndex];
+        ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        if (c.name.length > 1) ghost.classList.add('two-letter');
+        ghost.style.background = c.hex;
+        ghost.style.color = c.fg;
+        ghost.textContent = c.name;
+        ghost.style.left = x + 'px';
+        ghost.style.top  = y + 'px';
+        document.body.appendChild(ghost);
+        document.body.classList.add('dragging');
+      }
+
+      if (dragging) {
+        if (type === 'touch') ev.preventDefault();
+        ghost.style.left = x + 'px';
+        ghost.style.top  = y + 'px';
+
+        clearDropTargets();
+        const target = getPegAt(x, y);
+        if (target) target.el.classList.add('drop-target');
+      }
+    }
+
+    function onEnd(ev) {
+      document.removeEventListener(moveEvent, onMove);
+      document.removeEventListener(endEvent, onEnd);
+      if (cancelEvent) document.removeEventListener(cancelEvent, onEnd);
+
+      const { x, y } = getPos(ev);
+
+      if (dragging) {
+        if (type === 'touch') ev.preventDefault();
+        const target = getPegAt(x, y);
+        if (target) placeColor(target.slotIndex, colorIndex);
+        if (ghost) ghost.remove();
+        document.body.classList.remove('dragging');
+        clearDropTargets();
+      } else {
+        selectColor(colorIndex);
+      }
+    }
+
+    document.addEventListener(moveEvent, onMove,
+      type === 'touch' ? { passive: false } : false);
+    document.addEventListener(endEvent, onEnd);
+    if (cancelEvent) document.addEventListener(cancelEvent, onEnd);
+  }
+
+  function getPegAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    const peg = el.closest('.peg[data-slot]');
+    if (!peg) return null;
+    return { el: peg, slotIndex: parseInt(peg.dataset.slot, 10) };
+  }
+
+  function clearDropTargets() {
+    document.querySelectorAll('.peg.drop-target').forEach(el =>
+      el.classList.remove('drop-target'));
+  }
+
+  submitBtn.addEventListener('click', submitGuess);
+  undoBtn.addEventListener('click', undo);
+  newBtn.addEventListener('click', newGame);
+
+  newGame();
+</script>
+</body>
+</html>
