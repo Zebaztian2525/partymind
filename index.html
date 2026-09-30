@@ -335,8 +335,6 @@
       gap: 6px;
       padding: 4px 6px;
     }
-
-    /* Kommentaren stannar till höger men får radbrytas på max två rader */
     .comment {
       font-size: 0.62rem;
       line-height: 1.15;
@@ -349,12 +347,23 @@
     }
     .comment:empty { display: none; }
 
+    /* Palett som grid – alla åtta delar jämnt på bredden */
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+    }
+    .color-btn {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      font-size: 0.9rem;
+    }
+    .color-btn.two-letter { font-size: 0.62rem; }
+
     .fb-peg { width: 10px; height: 10px; }
-    .color-btn { width: 40px; height: 40px; font-size: 0.88rem; }
-    .color-btn.two-letter { font-size: 0.72rem; }
     .drag-ghost { width: 40px; height: 40px; font-size: 0.88rem; }
     .drag-ghost.two-letter { font-size: 0.72rem; }
-    .palette { gap: 8px; }
     .controls button { padding: 10px 8px; font-size: 0.85rem; }
   }
 </style>
